@@ -7,11 +7,13 @@
 #define SS 3
 #define pinRES 7
 
-byte Buf[255];
+byte Buf[256];
+byte Register, Value;
 int dobavka;
 int rBuf;
 int curFileNum,curFileNum2;
 int Count;
+int offset;
 long int fileSize;
 
 SPISettings spiSettings(16000000, MSBFIRST, SPI_MODE0);
@@ -189,8 +191,6 @@ entry.close();
 
 void playFile()
 {
-byte Register;
-byte Value;
 String filePath = curFile.name();
 String folder = "MUSIC/";
 filePath = folder += filePath;
@@ -223,50 +223,99 @@ File dataFile = SD.open(filePath);
 
     dataFile.seek(16); // Переходим к данным
         
-//    while (1)
-//                              {
-dobavka = -1;
+
+                while (1)
+                   {
+
+
+
+
 
 dataFile.read(Buf,256);
+//
+//for(int q = 0; q < 256; q++)
+//{Serial.print(q);
+//Serial.print(":");
+//Serial.println(Buf[q]);
+//}
+//
+//Serial.println("----------------------");
+//Serial.print("0:");
+//Serial.println(Buf[0]);
+//Serial.print("255:");
+//Serial.println(Buf[255]);
+//Serial.println("----------------------");
+
+if (dobavka == -3)
+{
+  delay(80 * Buf[0]);
+  offset = 1;
+}
+
+if (dobavka >= 0)
+{
+  noteTr ();
+  offset = 1;
+}
+
+dobavka = -1;
+
 
 for (int plBuf = 0; plBuf < 256;plBuf++)
 {
+    
+plBuf = plBuf + offset;
+offset = 0;
 
 Register = Buf[plBuf];
+
+  if (Register == 253){return;};
 
 if (Register != 255 and Register != 254)
 {
+      
 Register = Buf[plBuf];
 Value = Buf[plBuf+1];
-}
 
-writeAYRegister(Register, Value);
-plBuf++;
-if (plBuf = 255){dobavka = 0;}else if (plBuf = 254){dobavka = Register;}
+if (plBuf < 255)
+                {writeAYRegister(Register, Value);
+                 plBuf++;
+
+                } else {dobavka = Buf[255];
+                       //plBuf++;                       
+                
+                       }                                              
+
 }
 else
               {            
-              if (Register==255) {delay (20);
-                                                  if (plBuf == 254){dobavka = Buf[255];}
-              }
-              
+                if (Register == 255) 
+                      {
+                        delay (20);
+                      dobavka = -1;
+                      }
+               
                 else
-                {
-              Value = Buf[plBuf+1];
-              delay(80*Value);
-              plBuf++;
-                                                  if (plBuf == 254){dobavka = Buf[255]);}
-
-              }
-
+                 {
+                  if (plBuf < 255)
+                      {
+                      writeAYRegister(Register, Value);
+                      Value = Buf[plBuf+1];
+                      delay(80*Value);
+                      plBuf++;                   
+                      } else {dobavka = -3;}
+            }
 
               }
 
 }
+                              }
+}
+                           
 
-//                              }
+                                           
+                
 
-}            
 
 
 String TwoDigit (String abba)
@@ -325,4 +374,14 @@ void writeAYRegister(uint8_t address, uint8_t data) {
 }
 
 
+void noteTr ()
+{
+Register = dobavka;
+byte Value1 = Buf[0];
+Serial.print ("         Register:");
+Serial.println (Register);
+Serial.print ("         Value:");
 
+Serial.println (Value1);
+writeAYRegister(Register, Value1);
+}
