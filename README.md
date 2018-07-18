@@ -1,3 +1,3 @@
 IN PROGRESS VERSION
 
--Current task : Bufferisation
+-Current task : Make OSD mockup
