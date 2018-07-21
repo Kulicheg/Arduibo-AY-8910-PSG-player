@@ -14,7 +14,8 @@ int rBuf;
 int curFileNum,curFileNum2;
 int Count;
 int offset;
-long int fileSize;
+long int fileSize, songSize,  SizeBl;
+
 
 SPISettings spiSettings(16000000, MSBFIRST, SPI_MODE0);
 LiquidCrystal_I2C lcd(0x27, 20, 4);
@@ -63,10 +64,6 @@ fileSize = curFile.size();
 
 void loop() 
 {
-GoNextFile();
-GoNextFile();
-GoNextFile();
-GoNextFile();
 playFile();
 GoNextFile();
 
@@ -191,16 +188,28 @@ entry.close();
 
 void playFile()
 {
+
 String filePath = curFile.name();
 String folder = "MUSIC/";
 filePath = folder += filePath;
-float Pos = 0;
-float songSize = round((curFile.size() - 16)/2);
 
-resetAY();
+File dataFile = SD.open(filePath);
+
+        dataFile.seek(16); // Переходим к данным
 
 Serial.print("Now Playing:");
-Serial.println(filePath);
+Serial.println(dataFile.name());
+fileSize = dataFile.size();
+float Pos = 0;
+songSize = round((fileSize - 16)/2);
+SizeBl = (fileSize - 16) / 256;
+long int LastBl = (fileSize - 16) - SizeBl*256;
+
+
+Serial.print ("curFile.size() = ");
+Serial.println (fileSize);
+
+resetAY();
 
 
 lcd.setCursor(0,0);
@@ -219,32 +228,19 @@ lcd.setCursor(0,1);
 lcd.print(fileSize);
 
 
-File dataFile = SD.open(filePath);
 
-    dataFile.seek(16); // Переходим к данным
         
 
-                while (1)
+                while (SizeBl >= 0)
                    {
 
 
 
 
+Serial.print("SizeBl = ");
+Serial.println(SizeBl);
 
 dataFile.read(Buf,256);
-//
-//for(int q = 0; q < 256; q++)
-//{Serial.print(q);
-//Serial.print(":");
-//Serial.println(Buf[q]);
-//}
-//
-//Serial.println("----------------------");
-//Serial.print("0:");
-//Serial.println(Buf[0]);
-//Serial.print("255:");
-//Serial.println(Buf[255]);
-//Serial.println("----------------------");
 
 if (dobavka == -3)
 {
@@ -259,9 +255,11 @@ if (dobavka >= 0)
 }
 
 dobavka = -1;
+int playDo = 256;
 
+if (SizeBl == 0){playDo = LastBl;}
 
-for (int plBuf = 0; plBuf < 256;plBuf++)
+for (int plBuf = 0; plBuf < playDo; plBuf++)
 {
     
 plBuf = plBuf + offset;
@@ -269,7 +267,7 @@ offset = 0;
 
 Register = Buf[plBuf];
 
-  if (Register == 253){return;};
+  if (Register == 253){return;}; 
 
 if (Register != 255 and Register != 254)
 {
@@ -309,7 +307,9 @@ else
               }
 
 }
+                              SizeBl = SizeBl -1;
                               }
+                              
 }
                            
 
@@ -378,10 +378,5 @@ void noteTr ()
 {
 Register = dobavka;
 byte Value1 = Buf[0];
-Serial.print ("         Register:");
-Serial.println (Register);
-Serial.print ("         Value:");
-
-Serial.println (Value1);
 writeAYRegister(Register, Value1);
 }
