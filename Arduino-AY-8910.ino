@@ -2,10 +2,12 @@
 #include <SPI.h>
 #include <SD.h>
 
-#define BC1 6
-#define BCDIR 5
-#define SS 3
-#define pinRES 7
+#define SS 2
+#define pinRES 4
+#define BC1 5
+#define BCDIR 6
+#define SDcard 7
+
 
 byte Buf[256];
 byte Register, Value;
@@ -15,7 +17,7 @@ int curFileNum,curFileNum2;
 int Count;
 int offset;
 long int fileSize, songSize,  SizeBl;
-
+String filePath, folder;
 
 SPISettings spiSettings(16000000, MSBFIRST, SPI_MODE0);
 LiquidCrystal_I2C lcd(0x27, 20, 4);
@@ -43,7 +45,7 @@ pinMode(pinRES, OUTPUT);
     resetAY();
     
 
-if (!SD.begin(10)) 
+if (!SD.begin(SDcard)) 
 {
     lcd.setCursor(0,0);
     lcd.println("SD CARD ERROR");
@@ -98,12 +100,23 @@ if (!curFile)
 curFile = prvFile;
 curFileNum--;
 fileSize = curFile.size();
+filePath = curFile.name();
+folder = "MUSIC/";
+filePath = folder += filePath;
 curFile.close();
 prvFile.close();
 break;
 }
 }
 fileSize = curFile.size();
+
+filePath = curFile.name();
+folder = "MUSIC/";
+filePath = folder += filePath;
+
+Serial.print ("filePath = ");
+Serial.println (filePath);
+
 curFile.close();
 prvFile.close();
 
@@ -189,9 +202,7 @@ entry.close();
 void playFile()
 {
 
-String filePath = curFile.name();
-String folder = "MUSIC/";
-filePath = folder += filePath;
+
 
 File dataFile = SD.open(filePath);
 
@@ -200,13 +211,12 @@ File dataFile = SD.open(filePath);
 Serial.print("Now Playing:");
 Serial.println(dataFile.name());
 fileSize = dataFile.size();
-float Pos = 0;
 songSize = round((fileSize - 16)/2);
 SizeBl = (fileSize - 16) / 256;
 long int LastBl = (fileSize - 16) - SizeBl*256;
 
 
-Serial.print ("curFile.size() = ");
+Serial.print ("dataFile.size() = ");
 Serial.println (fileSize);
 
 resetAY();
@@ -267,9 +277,7 @@ offset = 0;
 
 Register = Buf[plBuf];
 
-  if (Register == 253){return;}; 
-
-if (Register != 255 and Register != 254)
+  if (Register != 255 and Register != 254)
 {
       
 Register = Buf[plBuf];
@@ -310,6 +318,7 @@ else
                               SizeBl = SizeBl -1;
                               }
                               
+dataFile.close();
 }
                            
 
