@@ -1,13 +1,16 @@
 #include <LiquidCrystal_I2C.h>
 #include <SPI.h>
 #include <SD.h>
+#include <Button.h>
+#include <TimerOne.h>
+#include <Encod_er.h>
 
 #define SS 2
 #define pinRES 4
 #define BC1 5
 #define BCDIR 6
 #define SDcard 7
-
+#define BUTTON_1_PIN 9  
 
 byte Buf[256];
 byte Register, Value;
@@ -23,9 +26,8 @@ SPISettings spiSettings(16000000, MSBFIRST, SPI_MODE0);
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 File root;
 File curFile,prvFile, nxtFile;
-
-
-
+Button button1(BUTTON_1_PIN, 5);
+Encod_er encoder( 3, 8, 5);
 
 
 void setup() 
@@ -243,13 +245,6 @@ lcd.print(fileSize);
 
                 while (SizeBl >= 0)
                    {
-
-
-
-
-Serial.print("SizeBl = ");
-Serial.println(SizeBl);
-
 dataFile.read(Buf,256);
 
 if (dobavka == -3)
@@ -260,8 +255,10 @@ if (dobavka == -3)
 
 if (dobavka >= 0)
 {
-  noteTr ();
-  offset = 1;
+Register = dobavka;
+byte Value1 = Buf[0];
+writeAYRegister(Register, Value1);
+offset = 1;
 }
 
 dobavka = -1;
@@ -271,6 +268,38 @@ if (SizeBl == 0){playDo = LastBl;}
 
 for (int plBuf = 0; plBuf < playDo; plBuf++)
 {
+
+
+
+
+
+
+button1.scanState();  // вызов метода ожидания стабильного состояния для кнопки 2
+  
+  if ( button1.flagClick == true ) {
+        // был клик кнопки
+    
+    button1.flagClick= false;         // сброс признака 
+    
+Serial.println ("BANG!");
+dataFile.close();
+return;
+  }
+
+
+  if(encoder.timeRight != 0) {
+    Serial.print(" Pos="); 
+    Serial.println(encoder.read()); // вывод текущего положения 
+    encoder.timeRight= 0;
+  }
+  if(encoder.timeLeft != 0) {
+    Serial.print(" Pos="); 
+    Serial.println(encoder.read()); // вывод текущего положения
+    encoder.timeLeft= 0;
+  } 
+
+
+
     
 plBuf = plBuf + offset;
 offset = 0;
@@ -383,9 +412,8 @@ void writeAYRegister(uint8_t address, uint8_t data) {
 }
 
 
-void noteTr ()
+void timerInterrupt() 
 {
-Register = dobavka;
-byte Value1 = Buf[0];
-writeAYRegister(Register, Value1);
+  encoder.scanState(); 
 }
+
