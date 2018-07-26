@@ -50,16 +50,14 @@ pinMode(pinRES, OUTPUT);
 if (!SD.begin(SDcard)) 
 {
     lcd.setCursor(0,0);
-    lcd.println("SD CARD ERROR");
-    Serial.println("SD CARD ERROR");
+    lcd.println(F("SD CARD ERROR"));
+    Serial.println(F("SD CARD ERROR"));
 while (1);
 }
 
-Serial.println("Welcome back!");
-
 root = SD.open("MUSIC/");
 
-Serial.print ("Total files:");
+Serial.print (F("Total files:)"));
 Serial.println (folderLenght());
 root.rewindDirectory();
 curFile =  root.openNextFile();
@@ -74,9 +72,6 @@ GoNextFile();
 curFile.close();
 prvFile.close();
 }
-
-
-
 
 
 void GoNextFile()
@@ -116,7 +111,7 @@ filePath = curFile.name();
 folder = "MUSIC/";
 filePath = folder += filePath;
 
-Serial.print ("filePath = ");
+Serial.print (F("filePath = "));
 Serial.println (filePath);
 
 curFile.close();
@@ -210,7 +205,7 @@ File dataFile = SD.open(filePath);
 
         dataFile.seek(16); // Переходим к данным
 
-Serial.print("Now Playing:");
+Serial.print (F("Now Playing:"));
 Serial.println(dataFile.name());
 fileSize = dataFile.size();
 songSize = round((fileSize - 16)/2);
@@ -218,7 +213,7 @@ SizeBl = (fileSize - 16) / 256;
 long int LastBl = (fileSize - 16) - SizeBl*256;
 
 
-Serial.print ("dataFile.size() = ");
+Serial.print (F("dataFile.size() = "));
 Serial.println (fileSize);
 
 resetAY();
@@ -281,7 +276,7 @@ button1.scanState();  // вызов метода ожидания стабиль
     
     button1.flagClick= false;         // сброс признака 
     
-Serial.println ("BANG!");
+Serial.println (F("BANG!"));
 dataFile.close();
 return;
   }
