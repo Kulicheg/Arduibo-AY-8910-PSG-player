@@ -21,13 +21,14 @@ int Count;
 int offset;
 long int fileSize, songSize,  SizeBl;
 String filePath, folder;
+byte jdPos;
 
 SPISettings spiSettings(16000000, MSBFIRST, SPI_MODE0);
-LiquidCrystal_I2C lcd(0x27, 20, 4);
+LiquidCrystal_I2C lcd(0x3f, 16, 2);
 File root;
 File curFile,prvFile, nxtFile;
-Button button1(BUTTON_1_PIN, 5);
-Encod_er encoder( 3, 8, 5);
+Button button1(BUTTON_1_PIN, 4);
+Encod_er encoder( 3, 8, 2);
 
 
 void setup() 
@@ -35,6 +36,11 @@ void setup()
 Serial.begin(115200);
 lcd.begin();
 SPI.begin();
+Timer1.initialize(1000); // инициализация таймера 1, период 250 мкс
+Timer1.attachInterrupt(timerInterrupt, 250); // задаем обработчик пр
+
+
+
 
 //init pins
 
@@ -57,17 +63,20 @@ while (1);
 
 root = SD.open("MUSIC/");
 
-Serial.print (F("Total files:)"));
+Serial.print (F("Total files:"));
 Serial.println (folderLenght());
 root.rewindDirectory();
 curFile =  root.openNextFile();
 fileSize = curFile.size();
 }
 
+
+
+
 void loop() 
 {
 playFile();
-GoNextFile();
+
 
 curFile.close();
 prvFile.close();
@@ -206,6 +215,8 @@ File dataFile = SD.open(filePath);
         dataFile.seek(16); // Переходим к данным
 
 Serial.print (F("Now Playing:"));
+Serial.print(curFileNum);
+Serial.print(".");
 Serial.println(dataFile.name());
 fileSize = dataFile.size();
 songSize = round((fileSize - 16)/2);
@@ -265,10 +276,7 @@ for (int plBuf = 0; plBuf < playDo; plBuf++)
 {
 
 
-
-
-
-
+////////////////////////////////////////////////
 button1.scanState();  // вызов метода ожидания стабильного состояния для кнопки 2
   
   if ( button1.flagClick == true ) {
@@ -276,24 +284,34 @@ button1.scanState();  // вызов метода ожидания стабиль
     
     button1.flagClick= false;         // сброс признака 
     
-Serial.println (F("BANG!"));
-dataFile.close();
-return;
-  }
+ Serial.println(F("Next Song"));
+ dataFile.close();
+    GoNextFile();
+    return;
+    }
 
 
   if(encoder.timeRight != 0) {
-    Serial.print(" Pos="); 
-    Serial.println(encoder.read()); // вывод текущего положения 
+    Serial.println(F("Next Song")); 
     encoder.timeRight= 0;
+        
+    dataFile.close();
+    GoNextFile();
+    return;
+  
+  
   }
-  if(encoder.timeLeft != 0) {
-    Serial.print(" Pos="); 
-    Serial.println(encoder.read()); // вывод текущего положения
-    encoder.timeLeft= 0;
-  } 
+ if(encoder.timeLeft != 0) {
+   Serial.println(F("Previous Song")); 
+   encoder.timeLeft= 0;
 
-
+   dataFile.close();
+   GoPrevFile();
+   return;
+     
+  
+  }
+/////////////////////////////////////////////////
 
     
 plBuf = plBuf + offset;
@@ -343,6 +361,7 @@ else
                               }
                               
 dataFile.close();
+GoNextFile();
 }
                            
 
@@ -411,4 +430,5 @@ void timerInterrupt()
 {
   encoder.scanState(); 
 }
+
 
