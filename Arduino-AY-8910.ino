@@ -221,37 +221,28 @@ Serial.println(dataFile.name());
 fileSize = dataFile.size();
 songSize = round((fileSize - 16)/2);
 SizeBl = (fileSize - 16) / 256;
+float SizeBl2 = SizeBl ;
 long int LastBl = (fileSize - 16) - SizeBl*256;
 
-
-Serial.print (F("dataFile.size() = "));
-Serial.println (fileSize);
-
-resetAY();
-
-
-lcd.setCursor(0,0);
-lcd.print("            ");
-lcd.setCursor(0,0);
-lcd.print(curFileNum+1);
+lcd.clear();
+lcd.print(curFileNum);
 lcd.print(".");
-lcd.print(curFile.name());
-
-lcd.setCursor(17,0);
+lcd.print(dataFile.name());;
+lcd.setCursor(0,1);
 lcd.print("  %");
 
-lcd.setCursor(0,1);
-lcd.print("            ");
-lcd.setCursor(0,1);
-lcd.print(fileSize);
-
-
-
-        
+resetAY();
 
                 while (SizeBl >= 0)
                    {
 dataFile.read(Buf,256);
+
+
+lcd.setCursor(0,1);
+float perc = abs(SizeBl/SizeBl2*100-100);
+int perc2 = perc; 
+lcd.print(perc2);
+
 
 if (dobavka == -3)
 {
@@ -292,21 +283,22 @@ button1.scanState();  // вызов метода ожидания стабиль
 
 
   if(encoder.timeRight != 0) {
-    Serial.println(F("Next Song")); 
+  
+    Serial.println(F("Previous Song"));
     encoder.timeRight= 0;
         
     dataFile.close();
-    GoNextFile();
+    GoPrevFile();
     return;
   
   
   }
  if(encoder.timeLeft != 0) {
-   Serial.println(F("Previous Song")); 
+   Serial.println(F("Next Song")); 
    encoder.timeLeft= 0;
 
    dataFile.close();
-   GoPrevFile();
+   GoNextFile();
    return;
      
   
