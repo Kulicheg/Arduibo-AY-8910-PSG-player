@@ -1,11 +1,24 @@
 #include <SPI.h>
 
-#define SS 12
+#define SS 10
 #define pinRES 15
-#define BC1 17
-#define BCDIR 16
-#define SDcard 6
-#define BUTTON_1_PIN 14
+#define BC1 20
+#define BCDIR 19
+
+
+
+////Pin connected to Data in (DS) of 74HC595
+const int dataPin = 10;
+//Pin connected to latch pin (ST_CP) of 74HC595
+const int latchPin = 15;
+//Pin connected to clock pin (SH_CP) of 74HC595
+const int clockPin = 14;
+
+const int pinBC1 =  20;     
+const int pinBCDIR =  19;
+
+
+
 
 
 byte Register, Value;
