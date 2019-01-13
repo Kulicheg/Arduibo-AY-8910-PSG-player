@@ -4,24 +4,31 @@
 //const int latchPin = 15;
 ////Pin connected to clock pin (SH_CP) of 74HC595
 //const int clockPin = 14;
+#include <Wire.h>
+#include "SSD1306Ascii.h"
+#include "SSD1306AsciiWire.h"
 
-#include <LiquidCrystal_I2C.h>
 #include <SPI.h>
 #include <SD.h>
 #include <Button.h>
 #include <TimerOne.h>
 #include <Encod_er.h>
 
+
+#define OLED_I2C_ADDRESS 0x3C
+#define I2C_ADDRESS 0x3C
+#define RST_PIN -1
+
+#define SDcard 9
 #define ENC_S1 8
 #define ENC_S2 7
 #define BUTTON_1_PIN 6
-#define SDcard 9
+
+
 #define SS 14
 #define pinRES 15
 #define BCDIR 16
 #define BC1 17
-
-
 
 
 byte Buf[256];
@@ -36,7 +43,8 @@ String filePath, folder;
 byte jdPos;
 
 SPISettings spiSettings(16000000, MSBFIRST, SPI_MODE0);
-LiquidCrystal_I2C lcd(0x27, 20, 4);
+
+//SSD1306AsciiWire oled;
 File root;
 File curFile, prvFile, nxtFile;
 Button button1(BUTTON_1_PIN, 4);
@@ -45,15 +53,23 @@ Encod_er encoder( ENC_S1, ENC_S2, 2);
 
 void setup()
 {
-  
+  Wire.begin();
   digitalWrite(2, HIGH);
   Serial.begin(115200);
-  lcd.begin();
+  Serial.println(F("1"));
+  //oled.begin(&Adafruit128x32, OLED_I2C_ADDRESS);
+
   SPI.begin();
   Timer1.initialize(1000); // инициализация таймера 1, период 250 мкс
   Timer1.attachInterrupt(timerInterrupt, 250); // задаем обработчик пр
 
 
+
+  //  oled.setFont(Adafruit5x7);
+  //  oled.clear();
+  //  oled.set2X();
+  //  oled.println("PSG AY8910");
+  //  delay (1000);
 
 
   //init pins
@@ -65,12 +81,14 @@ void setup()
   pinMode(2, OUTPUT);
 
   resetAY();
-
+  Serial.println(F("2"));
 
   if (!SD.begin(SDcard))
   {
-    lcd.setCursor(0, 0);
-    lcd.println(F("SD CARD ERROR"));
+
+    //    oled.clear();
+    //    oled.set2X();
+    //    oled.println(F("SD CARD ERROR"));
     Serial.println(F("SD CARD ERROR"));
     while (1);
   }
@@ -82,6 +100,9 @@ void setup()
   root.rewindDirectory();
   curFile =  root.openNextFile();
   fileSize = curFile.size();
+
+
+  GoNextFile();
 }
 
 
@@ -244,23 +265,13 @@ void playFile()
   resetAY();
 
 
-  lcd.setCursor(0, 0);
-  lcd.print("            ");
-  lcd.setCursor(0, 0);
-  lcd.print(curFileNum + 1);
-  lcd.print(".");
-  lcd.print(curFile.name());
 
-  lcd.setCursor(17, 0);
-  lcd.print("  %");
-
-  lcd.setCursor(0, 1);
-  lcd.print("            ");
-  lcd.setCursor(0, 1);
-  lcd.print(fileSize);
-
-
-
+  //  oled.clear();
+  //  oled.set2X();
+  //
+  //  oled.print(curFileNum + 1);
+  //  oled.print(".");
+  //  oled.print(curFile.name());
 
 
   while (SizeBl >= 0)
@@ -450,6 +461,3 @@ void timerInterrupt()
 {
   encoder.scanState();
 }
-
-
-
